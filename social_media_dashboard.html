@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Adly — Social Media Dashboard</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#0d0f18;--bg2:#141720;--bg3:#1c2033;--bg4:#222640;
+  --border:#2a2f4a;--accent:#6c63ff;--green:#06d6a0;--red:#ff6b6b;
+  --yellow:#ffd166;--blue:#48dbfb;--pink:#ff9ff3;--orange:#ff9f43;
+  --text:#e8eaf6;--muted:#6b728f;--radius:10px;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* LAYOUT */
+.layout{display:flex;min-height:100vh;}
+.sidebar{width:200px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto;}
+.content{flex:1;overflow-x:hidden;}
+
+/* SIDEBAR */
+.sidebar-logo{padding:18px 16px;border-bottom:1px solid var(--border);}
+.logo-text{font-size:18px;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--green));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.sidebar-brand{padding:14px 16px;border-bottom:1px solid var(--border);}
+.sidebar-brand .brand-name{font-size:13px;font-weight:700;margin-bottom:2px;}
+.sidebar-brand .brand-sub{font-size:10px;color:var(--muted);}
+.sidebar-nav{padding:10px 0;flex:1;}
+.nav-section{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);padding:10px 16px 4px;}
+.nav-item{display:flex;align-items:center;gap:8px;padding:8px 16px;font-size:12px;color:var(--muted);cursor:pointer;transition:all .15s;border-left:2px solid transparent;}
+.nav-item:hover{background:var(--bg3);color:var(--text);}
+.nav-item.active{background:rgba(108,99,255,.12);color:var(--accent);border-left-color:var(--accent);}
+.nav-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0;}
+
+/* HEADER */
+.header{background:var(--bg2);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;position:sticky;top:0;z-index:50;}
+.header-title{font-size:13px;font-weight:700;}
+.header-sub{font-size:10px;color:var(--muted);margin-top:1px;}
+.header-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+.btn{padding:6px 12px;border-radius:7px;border:none;cursor:pointer;font-size:11px;font-weight:600;transition:all .15s;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:hover{filter:brightness(1.15);}
+.btn-sm{background:var(--bg3);color:var(--text);border:1px solid var(--border);}
+.btn-sm:hover{background:var(--bg4);}
+
+/* MAIN */
+.main{padding:20px 24px;max-width:1400px;}
+
+/* FILTERS */
+.filters{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:18px;align-items:flex-end;}
+.fg{display:flex;flex-direction:column;gap:3px;}
+.fl{font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);}
+select,input[type=text]{background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:7px;font-size:11px;min-width:130px;outline:none;}
+select:focus,input:focus{border-color:var(--accent);}
+.period-toggle{display:flex;background:var(--bg2);border:1px solid var(--border);border-radius:7px;overflow:hidden;}
+.pt-btn{padding:6px 12px;border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:11px;font-weight:500;}
+.pt-btn.active{background:var(--accent);color:#fff;}
+.pt-btn:hover:not(.active){background:var(--bg3);color:var(--text);}
+
+/* KPI STRIP */
+.kpi-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px;margin-bottom:20px;}
+.kpi{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;position:relative;overflow:hidden;}
+.kpi::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--kc,var(--accent));}
+.kpi-num{font-size:26px;font-weight:800;letter-spacing:-1px;line-height:1;color:var(--kc,var(--text));}
+.kpi-lbl{font-size:10px;color:var(--muted);margin-top:4px;}
+.kpi-delta{font-size:10px;font-weight:600;margin-top:6px;}
+.up{color:var(--green);}
+.neutral{color:var(--muted);}
+
+/* ROW GRID */
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:20px;}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:18px;}
+.card-title{font-size:12px;font-weight:700;margin-bottom:2px;}
+.card-sub{font-size:10px;color:var(--muted);margin-bottom:14px;}
+
+/* SVG CHARTS */
+svg text{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
+
+/* H-BAR CHART */
+.hbar-row{display:flex;align-items:center;margin-bottom:10px;gap:8px;}
+.hbar-label{font-size:11px;color:var(--muted);width:90px;text-align:right;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.hbar-track{flex:1;background:var(--bg3);border-radius:3px;height:18px;position:relative;overflow:hidden;}
+.hbar-fill{height:100%;border-radius:3px;transition:width .6s ease;display:flex;align-items:center;justify-content:flex-end;padding-right:6px;}
+.hbar-val{font-size:10px;font-weight:600;color:#fff;white-space:nowrap;}
+.hbar-val-out{font-size:10px;font-weight:600;color:var(--muted);margin-left:6px;min-width:36px;}
+
+/* DONUT */
+.donut-wrap{display:flex;align-items:center;gap:16px;}
+.donut-svg{flex-shrink:0;}
+.donut-legend{flex:1;}
+.legend-item{display:flex;align-items:center;gap:7px;margin-bottom:7px;}
+.legend-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.legend-label{font-size:11px;color:var(--muted);flex:1;}
+.legend-val{font-size:11px;font-weight:600;color:var(--text);}
+.legend-pct{font-size:10px;color:var(--muted);}
+
+/* LINE CHART */
+.line-svg{width:100%;overflow:visible;}
+
+/* TABLE */
+.table-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:20px;}
+.table-hdr{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.table-title{font-size:12px;font-weight:700;}
+.tcount{font-size:10px;color:var(--muted);margin-top:1px;}
+.search-wrap{display:flex;gap:6px;}
+.search-input{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:5px 10px;border-radius:6px;font-size:11px;width:180px;outline:none;}
+.search-input:focus{border-color:var(--accent);}
+.tw{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:11px;}
+th{background:var(--bg3);padding:8px 12px;text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:600;white-space:nowrap;cursor:pointer;user-select:none;}
+th:hover{color:var(--text);}
+td{padding:9px 12px;border-top:1px solid var(--border);vertical-align:middle;}
+tr:hover td{background:rgba(108,99,255,.04);}
+.bdg{display:inline-flex;align-items:center;padding:2px 7px;border-radius:20px;font-size:9px;font-weight:700;letter-spacing:.3px;}
+.p-reddit{background:rgba(255,69,0,.15);color:#ff4500;}
+.p-x{background:rgba(29,155,240,.15);color:#1d9bf0;}
+.p-linkedin{background:rgba(10,102,194,.15);color:#0a66c2;}
+.p-facebook{background:rgba(24,119,242,.15);color:#1877f2;}
+.p-tiktok{background:rgba(255,0,80,.15);color:#ff0050;}
+.p-other{background:rgba(107,114,143,.15);color:var(--muted);}
+.t-post{background:rgba(108,99,255,.15);color:var(--accent);display:inline-block;padding:2px 7px;border-radius:4px;font-size:9px;font-weight:600;}
+.t-comment{background:rgba(6,214,160,.12);color:var(--green);display:inline-block;padding:2px 7px;border-radius:4px;font-size:9px;font-weight:600;}
+.s-active{color:var(--green);font-size:10px;font-weight:600;}
+.s-inactive{color:var(--muted);font-size:10px;}
+.r-yes{background:rgba(6,214,160,.15);color:var(--green);display:inline-block;padding:2px 7px;border-radius:5px;font-size:9px;font-weight:600;}
+.r-no{background:rgba(107,114,143,.1);color:var(--muted);display:inline-block;padding:2px 7px;border-radius:5px;font-size:9px;font-weight:600;}
+.r-unknown{background:rgba(255,209,102,.12);color:var(--yellow);display:inline-block;padding:2px 7px;border-radius:5px;font-size:9px;font-weight:600;}
+.uv{color:var(--yellow);font-weight:700;}
+.ptitle{max-width:240px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.alink{color:var(--accent);text-decoration:none;font-size:10px;}
+.alink:hover{text-decoration:underline;}
+.delbtn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;padding:2px 5px;}
+.delbtn:hover{color:var(--red);}
+
+/* PAGINATION */
+.pag{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-top:1px solid var(--border);font-size:10px;color:var(--muted);}
+.pag-btns{display:flex;gap:3px;}
+.pb{padding:3px 8px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-size:10px;}
+.pb.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+.pb:hover:not(.active){background:var(--bg3);}
+
+/* GSC */
+.gsc{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:20px;}
+.gsc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;}
+.gsc-badge{background:rgba(255,209,102,.1);border:1px solid rgba(255,209,102,.3);color:var(--yellow);padding:2px 9px;border-radius:5px;font-size:10px;font-weight:700;}
+.gsc-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;}
+.step{background:var(--bg3);border-radius:7px;padding:11px;display:flex;gap:8px;}
+.stepn{width:20px;height:20px;border-radius:50%;background:var(--accent);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.stept{font-size:10px;color:var(--muted);line-height:1.5;}
+.stept strong{color:var(--text);display:block;margin-bottom:1px;font-size:11px;}
+
+/* MODAL */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;align-items:center;justify-content:center;}
+.overlay.open{display:flex;}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:22px;width:520px;max-width:95vw;max-height:92vh;overflow-y:auto;}
+.modal-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+.modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.mf{display:flex;flex-direction:column;gap:3px;}
+.mf.full{grid-column:1/-1;}
+.mf label{font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);}
+.mf input,.mf select{min-width:unset;width:100%;font-size:11px;padding:6px 10px;}
+.modal-ftr{display:flex;gap:7px;justify-content:flex-end;margin-top:14px;}
+
+/* IMPORT */
+.import-bar{background:linear-gradient(135deg,rgba(108,99,255,.1),rgba(6,214,160,.07));border:1px dashed rgba(108,99,255,.4);border-radius:var(--radius);padding:11px 16px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.import-bar a{color:var(--accent);}
+
+/* TOAST */
+.toast{position:fixed;bottom:18px;right:18px;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:9px 14px;font-size:11px;box-shadow:0 8px 30px rgba(0,0,0,.4);transform:translateY(50px);opacity:0;transition:all .25s;z-index:300;}
+.toast.show{transform:translateY(0);opacity:1;}
+
+@media(max-width:900px){
+  .sidebar{display:none;}
+  .row2,.row3{grid-template-columns:1fr;}
+  .main{padding:12px 14px;}
+}
+</style>
+</head>
+<body>
+
+<div class="layout">
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-text">adly</div>
+    <div style="font-size:9px;color:var(--muted);margin-top:1px;">Social Media Tracker</div>
+  </div>
+  <div class="sidebar-brand">
+    <div class="brand-name" id="sbBrand">All Brands</div>
+    <div class="brand-sub" id="sbCount">Loading…</div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">Sections</div>
+    <div class="nav-item active" onclick="scrollTo('kpiSection')"><div class="nav-dot"></div>Overview</div>
+    <div class="nav-item" onclick="scrollTo('trendSection')"><div class="nav-dot"></div>Activity trend</div>
+    <div class="nav-item" onclick="scrollTo('platformSection')"><div class="nav-dot"></div>Platform split</div>
+    <div class="nav-item" onclick="scrollTo('brandSection')"><div class="nav-dot"></div>Brand table</div>
+    <div class="nav-item" onclick="scrollTo('gscSection')"><div class="nav-dot"></div>Google ranking</div>
+    <div class="nav-section" style="margin-top:8px;">Actions</div>
+    <div class="nav-item" onclick="openModal()"><div class="nav-dot"></div>Add entry</div>
+    <div class="nav-item" onclick="document.getElementById('csvFile').click()"><div class="nav-dot"></div>Import CSV</div>
+    <div class="nav-item" onclick="exportCSV()"><div class="nav-dot"></div>Export CSV</div>
+    <div class="nav-item" onclick="downloadTemplate()"><div class="nav-dot"></div>Get template</div>
+  </nav>
+  <div style="padding:12px 16px;border-top:1px solid var(--border);">
+    <div id="sidebarLastUpdated" style="font-size:9px;color:var(--muted);"></div>
+  </div>
+</aside>
+
+<!-- CONTENT -->
+<div class="content">
+  <div class="header">
+    <div>
+      <div class="header-title" id="hdrTitle">Social Media Dashboard</div>
+      <div class="header-sub" id="hdrSub">All brands · All platforms</div>
+    </div>
+    <div class="header-actions">
+      <label for="csvFile" class="btn btn-sm" style="cursor:pointer;">⬆ Import CSV</label>
+      <input type="file" id="csvFile" accept=".csv" style="display:none" onchange="importCSV(event)">
+      <button class="btn btn-sm" onclick="exportCSV()">⬇ Export</button>
+      <button class="btn btn-primary" onclick="openModal()">＋ Add Entry</button>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <div class="import-bar">
+      <span style="font-size:11px;color:var(--muted);">
+        <strong style="color:var(--text);">Sample data loaded.</strong> Import your own CSV or add entries manually.
+        <a href="#" onclick="downloadTemplate();return false;">Download template ↓</a>
+      </span>
+    </div>
+
+    <!-- FILTERS -->
+    <div class="filters">
+      <div class="fg"><span class="fl">Brand</span>
+        <select id="fBrand" onchange="applyFilters()"><option value="all">All Brands</option></select></div>
+      <div class="fg"><span class="fl">Platform</span>
+        <select id="fPlatform" onchange="applyFilters()"><option value="all">All Platforms</option><option>Reddit</option><option>X</option><option>LinkedIn</option><option>Facebook</option><option>TikTok</option></select></div>
+      <div class="fg"><span class="fl">Type</span>
+        <select id="fType" onchange="applyFilters()"><option value="all">Posts &amp; Comments</option><option>Post</option><option>Comment</option></select></div>
+      <div class="fg"><span class="fl">Status</span>
+        <select id="fStatus" onchange="applyFilters()"><option value="all">All Status</option><option>Active</option><option>Inactive</option></select></div>
+      <div class="fg"><span class="fl">Google Ranking</span>
+        <select id="fRanking" onchange="applyFilters()"><option value="all">All</option><option value="Yes">Ranking ✓</option><option value="No">Not ranking</option></select></div>
+      <div class="fg"><span class="fl">Period</span>
+        <div class="period-toggle">
+          <button class="pt-btn active" onclick="setPeriod('daily',this)">Daily</button>
+          <button class="pt-btn" onclick="setPeriod('weekly',this)">Weekly</button>
+          <button class="pt-btn" onclick="setPeriod('monthly',this)">Monthly</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <div id="kpiSection" class="kpi-strip"></div>
+
+    <!-- TREND + PLATFORM -->
+    <div id="trendSection" class="row2">
+      <div class="card">
+        <div class="card-title">Posts &amp; Comments Over Time</div>
+        <div class="card-sub" id="trendSub">Daily — last 30 days</div>
+        <div id="trendChart"></div>
+      </div>
+      <div class="card" id="platformSection">
+        <div class="card-title">Platform Breakdown</div>
+        <div class="card-sub">Distribution by platform</div>
+        <div id="platformChart"></div>
+      </div>
+    </div>
+
+    <!-- UPVOTES + RANKING + BRAND -->
+    <div class="row3">
+      <div class="card">
+        <div class="card-title">Upvotes &amp; Likes Over Time</div>
+        <div class="card-sub">Total engagement per period</div>
+        <div id="upvotesChart"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Google Ranking Status</div>
+        <div class="card-sub">Which posts rank in search</div>
+        <div id="rankingChart"></div>
+      </div>
+      <div class="card" id="brandSection">
+        <div class="card-title">Performance by Brand</div>
+        <div class="card-sub">Total upvotes per brand</div>
+        <div id="brandChart"></div>
+      </div>
+    </div>
+
+    <!-- GSC -->
+    <div id="gscSection" class="gsc">
+      <div class="gsc-top">
+        <div>
+          <div style="font-size:12px;font-weight:700;">🔍 Google Search Console Integration</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:2px;">Auto-detect which posts rank in Google — requires GSC setup</div>
+        </div>
+        <span class="gsc-badge">Setup Required</span>
+      </div>
+      <div class="gsc-steps">
+        <div class="step"><div class="stepn">1</div><div class="stept"><strong>Google Cloud Console</strong>Create project → Enable "Search Console API"</div></div>
+        <div class="step"><div class="stepn">2</div><div class="stept"><strong>OAuth Credentials</strong>Create OAuth 2.0 Client ID → Download JSON key</div></div>
+        <div class="step"><div class="stepn">3</div><div class="stept"><strong>Verify Properties</strong>Add brand URLs as GSC properties</div></div>
+        <div class="step"><div class="stepn">4</div><div class="stept"><strong>Connect to Adly</strong>Share credentials — ranking column auto-populates</div></div>
+      </div>
+      <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:10px;color:var(--muted);">
+        💡 <strong style="color:var(--text);">Meanwhile:</strong> Mark "Google Ranking = Yes" manually when you spot a post appearing in Google search results.
+      </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-card">
+      <div class="table-hdr">
+        <div>
+          <div class="table-title">All Posts &amp; Comments</div>
+          <div class="tcount" id="tcount"></div>
+        </div>
+        <div class="search-wrap">
+          <input class="search-input" type="text" placeholder="🔍 Search…" id="searchInput" oninput="applyFilters()">
+          <select style="min-width:100px;" onchange="applyFilters()" id="fSort">
+            <option value="date">Newest</option>
+            <option value="upvotes">Top upvotes</option>
+            <option value="brand">Brand A–Z</option>
+          </select>
+        </div>
+      </div>
+      <div class="tw">
+        <table>
+          <thead><tr>
+            <th>Brand</th><th>Platform</th><th>Type</th><th>Title</th>
+            <th>Date</th><th>Upvotes</th><th>Comments</th><th>Status</th><th>Google Ranking</th><th>Link</th><th></th>
+          </tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+      <div class="pag">
+        <span id="pagInfo"></span>
+        <div class="pag-btns" id="pagBtns"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<!-- Modal -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-hdr">
+      <span style="font-size:14px;font-weight:700;">Add Entry</span>
+      <button onclick="closeModal()" style="background:none;border:none;color:var(--muted);font-size:17px;cursor:pointer;">✕</button>
+    </div>
+    <div class="modal-grid">
+      <div class="mf full"><label>Brand *</label><input type="text" id="mBrand" placeholder="e.g. Nexaflow" list="brandDL"><datalist id="brandDL"></datalist></div>
+      <div class="mf"><label>Platform *</label><select id="mPlat"><option>Reddit</option><option>X</option><option>LinkedIn</option><option>Facebook</option><option>TikTok</option><option>Other</option></select></div>
+      <div class="mf"><label>Type</label><select id="mType"><option>Post</option><option>Comment</option></select></div>
+      <div class="mf full"><label>Title / Content *</label><input type="text" id="mTitle" placeholder="Post title or comment preview"></div>
+      <div class="mf"><label>Date</label><input type="date" id="mDate"></div>
+      <div class="mf"><label>Status</label><select id="mStat"><option>Active</option><option>Inactive</option></select></div>
+      <div class="mf"><label>Upvotes / Likes</label><input type="number" id="mUp" value="0" min="0"></div>
+      <div class="mf"><label>Comments count</label><input type="number" id="mCom" value="0" min="0"></div>
+      <div class="mf"><label>Google Ranking</label><select id="mRank"><option>Unknown</option><option>Yes</option><option>No</option></select></div>
+      <div class="mf full"><label>URL</label><input type="text" id="mURL" placeholder="https://…"></div>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn btn-sm" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEntry()">Save Entry</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── BRAND COLOURS ────────────────────────────────────────────────────────────
+const BC={
+  'Nexaflow':'#6c63ff','Verdant Co':'#00d4aa','Ironbolt':'#ff6b6b',
+  'SkyBridge':'#ffd166','Pulsewave':'#06d6a0','Arcline':'#ff9f43',
+  'Driftlabs':'#48dbfb','Coreshift':'#a29bfe',
+};
+const PC={Reddit:'#ff4500',X:'#1d9bf0',LinkedIn:'#0a66c2',Facebook:'#1877f2',TikTok:'#ff0050',Other:'#7b82a0'};
+const EXTRA=['#e17055','#fd79a8','#55efc4','#fdcb6e','#74b9ff','#e84393'];
+
+// ── SAMPLE DATA ──────────────────────────────────────────────────────────────
+function ri(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function dAgo(n){const d=new Date();d.setDate(d.getDate()-n);return d.toISOString().slice(0,10);}
+const BRANDS=Object.keys(BC);
+const PLATS=['Reddit','Reddit','Reddit','X','X','LinkedIn','Facebook','TikTok'];
+const TITLES=[
+  'How we grew our SaaS from 0 to 10k users without paid ads',
+  'Our honest review after 6 months — the full breakdown',
+  'Why we switched from X to Reddit for community building',
+  'The growth hack that 10x'd our organic traffic this quarter',
+  'We built a community of 50k members — here\'s what we learned',
+  'Best practices for authentic brand engagement on Reddit in 2026',
+  'Anyone using this platform for B2B lead generation?',
+  'We\'re launching next week — community feedback welcome',
+  'Deep dive: platform engagement comparison across socials',
+  'How our brand went viral without any influencer partnerships',
+  'AMA: Building brand presence from zero on social media',
+  'Stop sleeping on LinkedIn for B2B community building',
+  'Our Q1 social media report — full numbers inside',
+  'We ran a 90-day Reddit experiment — complete results',
+  'Hot take: most brand accounts are doing social media wrong',
+  'Monthly community update — what\'s new from our team',
+  'We tried every platform for 3 months — honest results',
+  'Comment: We actually tried this and it worked really well',
+  'The underrated subreddits where your audience actually lives',
+  'Real talk: what\'s your organic reach looking like these days?',
+];
+const SUBS=['r/startups','r/SaaS','r/entrepreneur','r/marketing','r/socialmedia','r/growthhacking'];
+
+let allData=[];
+function genSample(){
+  const d=[];
+  for(let i=0;i<120;i++){
+    const brand=BRANDS[ri(0,BRANDS.length-1)];
+    const plat=PLATS[ri(0,PLATS.length-1)];
+    const type=ri(0,2)>0?'Post':'Comment';
+    const days=ri(0,89);
+    const upvotes=type==='Post'?ri(15,2600):ri(1,380);
+    const comments=type==='Post'?ri(0,290):0;
+    const status=['Active','Active','Active','Inactive'][ri(0,3)];
+    const rank=upvotes>550?(Math.random()>.3?'Yes':'No'):['Yes','No','No','No','Unknown'][ri(0,4)];
+    const title=TITLES[ri(0,TITLES.length-1)];
+    const sub=SUBS[ri(0,SUBS.length-1)];
+    const url=plat==='Reddit'?`https://reddit.com/${sub}/comments/${Math.random().toString(36).slice(2,8)}`:
+              plat==='X'?`https://x.com/user/status/${ri(1e14,9e14)}`:
+              `https://${plat.toLowerCase()}.com/post/${Math.random().toString(36).slice(2,8)}`;
+    d.push({id:i,brand,platform:plat,type,title,date:dAgo(days),upvotes,comments,status,googleRanking:rank,url});
+  }
+  return d.sort((a,b)=>b.date.localeCompare(a.date));
+}
+allData=genSample();
+
+// ── STATE ────────────────────────────────────────────────────────────────────
+let period='daily', pg=1, sortK='date', sortD=-1;
+const PS=25;
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+function init(){
+  const now=new Date().toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+  document.getElementById('sidebarLastUpdated').textContent='Updated '+now;
+  populateBrandFilter();
+  applyFilters();
+}
+
+function populateBrandFilter(){
+  const sel=document.getElementById('fBrand');
+  const dl=document.getElementById('brandDL');
+  while(sel.options.length>1)sel.remove(1);
+  dl.innerHTML='';
+  [...new Set(allData.map(d=>d.brand))].sort().forEach(b=>{
+    const o=document.createElement('option');o.value=b;o.textContent=b;sel.appendChild(o);
+    const d2=document.createElement('option');d2.value=b;dl.appendChild(d2);
+  });
+}
+
+// ── FILTERS ──────────────────────────────────────────────────────────────────
+function getF(){
+  const brand=document.getElementById('fBrand').value;
+  const plat=document.getElementById('fPlatform').value;
+  const type=document.getElementById('fType').value;
+  const stat=document.getElementById('fStatus').value;
+  const rank=document.getElementById('fRanking').value;
+  const q=document.getElementById('searchInput').value.toLowerCase();
+  return allData.filter(d=>
+    (brand==='all'||d.brand===brand)&&
+    (plat==='all'||d.platform===plat)&&
+    (type==='all'||d.type===type)&&
+    (stat==='all'||d.status===stat)&&
+    (rank==='all'||d.googleRanking===rank)&&
+    (!q||d.title.toLowerCase().includes(q)||d.brand.toLowerCase().includes(q)||d.platform.toLowerCase().includes(q))
+  );
+}
+
+function applyFilters(){
+  const data=getF();
+  // Update sidebar
+  const brand=document.getElementById('fBrand').value;
+  document.getElementById('sbBrand').textContent=brand==='all'?'All Brands':brand;
+  document.getElementById('sbCount').textContent=data.length+' entries';
+  renderKPIs(data);
+  renderTrendChart(data);
+  renderPlatformChart(data);
+  renderUpvotesChart(data);
+  renderRankingChart(data);
+  renderBrandChart(data);
+  renderTable(data);
+}
+
+function setPeriod(p,el){
+  period=p;
+  document.querySelectorAll('.pt-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  const subs={daily:'Daily — last 30 days',weekly:'Weekly — last 12 weeks',monthly:'Monthly — last 6 months'};
+  document.getElementById('trendSub').textContent=subs[p];
+  applyFilters();
+}
+
+function scrollTo(id){document.getElementById(id)&&document.getElementById(id).scrollIntoView({behavior:'smooth',block:'start'});}
+
+// ── KPIs ─────────────────────────────────────────────────────────────────────
+function renderKPIs(data){
+  const posts=data.filter(d=>d.type==='Post').length;
+  const coms=data.filter(d=>d.type==='Comment').length;
+  const uvs=data.reduce((s,d)=>s+d.upvotes,0);
+  const active=data.filter(d=>d.status==='Active').length;
+  const ranking=data.filter(d=>d.googleRanking==='Yes').length;
+  const brands=new Set(data.map(d=>d.brand)).size;
+  const n=data.length||1;
+  document.getElementById('kpiSection').innerHTML=[
+    {lbl:'Total Posts',val:posts.toLocaleString(),d:'↑ 12% vs prev',cls:'up',kc:'#6c63ff'},
+    {lbl:'Total Comments',val:coms.toLocaleString(),d:'↑ 8% vs prev',cls:'up',kc:'#00d4aa'},
+    {lbl:'Upvotes / Likes',val:uvs.toLocaleString(),d:'↑ 23% vs prev',cls:'up',kc:'#ffd166'},
+    {lbl:'Active Posts',val:active.toLocaleString(),d:(active/n*100|0)+'% of all entries',cls:'neutral',kc:'#06d6a0'},
+    {lbl:'Ranking in Google',val:ranking.toLocaleString(),d:(ranking/n*100|0)+'% rank in search',cls:'neutral',kc:'#ff6b6b'},
+    {lbl:'Brands Tracked',val:brands.toLocaleString(),d:'Across all platforms',cls:'neutral',kc:'#a29bfe'},
+  ].map(k=>`<div class="kpi" style="--kc:${k.kc}">
+    <div class="kpi-num">${k.val}</div>
+    <div class="kpi-lbl">${k.lbl}</div>
+    <div class="kpi-delta ${k.cls}">${k.d}</div>
+  </div>`).join('');
+}
+
+// ── PERIOD BUCKETS ────────────────────────────────────────────────────────────
+function getBuckets(){
+  if(period==='daily'){
+    const lbls=[],dates=[];
+    for(let i=29;i>=0;i--){const d=dAgo(i);lbls.push(d.slice(5));dates.push({s:d,e:d});}
+    return {lbls,dates};
+  }
+  if(period==='weekly'){
+    const lbls=[],dates=[];
+    for(let i=11;i>=0;i--){
+      const d=new Date();d.setDate(d.getDate()-i*7);
+      const s=d.toISOString().slice(0,10);
+      const e=new Date(d);e.setDate(e.getDate()+6);
+      lbls.push(d.toLocaleDateString('en-US',{month:'short',day:'numeric'}));
+      dates.push({s,e:e.toISOString().slice(0,10)});
+    }
+    return {lbls,dates};
+  }
+  const lbls=[],dates=[];
+  for(let i=5;i>=0;i--){
+    const d=new Date();d.setMonth(d.getMonth()-i);
+    const ym=d.toISOString().slice(0,7);
+    lbls.push(d.toLocaleDateString('en-US',{month:'short',year:'2-digit'}));
+    dates.push({s:ym+'-01',e:ym+'-31'});
+  }
+  return {lbls,dates};
+}
+
+function bucketCount(data,dates,fn){return dates.map(b=>data.filter(d=>(!fn||fn(d))&&d.date>=b.s&&d.date<=b.e).length);}
+function bucketSum(data,dates,field){return dates.map(b=>data.filter(d=>d.date>=b.s&&d.date<=b.e).reduce((s,d)=>s+(d[field]||0),0));}
+
+// ── SVG LINE CHART ─────────────────────────────────────────────────────────────
+function svgLine(container,labels,series,h){
+  h=h||200;
+  const W=container.offsetWidth||500;
+  const PAD={t:16,r:12,b:42,l:44};
+  const cW=W-PAD.l-PAD.r, cH=h-PAD.t-PAD.b;
+  const allV=series.flatMap(s=>s.values);
+  const maxV=Math.max(...allV,1);
+  const step=cW/(labels.length-1||1);
+
+  let svg=`<svg viewBox="0 0 ${W} ${h}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:${h}px;display:block;">`;
+
+  // grid
+  for(let i=0;i<=4;i++){
+    const y=PAD.t+cH*(1-i/4);
+    const v=Math.round(maxV*i/4);
+    svg+=`<line x1="${PAD.l}" y1="${y}" x2="${PAD.l+cW}" y2="${y}" stroke="#2a2f4a" stroke-width="1"/>`;
+    svg+=`<text x="${PAD.l-4}" y="${y+3}" text-anchor="end" font-size="9" fill="#6b728f">${v}</text>`;
+  }
+
+  // x labels
+  const nth=Math.max(1,Math.ceil(labels.length/7));
+  labels.forEach((lbl,i)=>{
+    if(i%nth!==0&&i!==labels.length-1)return;
+    const x=PAD.l+i*step;
+    svg+=`<text x="${x}" y="${h-6}" text-anchor="middle" font-size="9" fill="#6b728f" transform="rotate(-30,${x},${h-6})">${lbl}</text>`;
+  });
+
+  // series
+  series.forEach(s=>{
+    const pts=s.values.map((v,i)=>({x:PAD.l+i*step,y:PAD.t+cH*(1-v/maxV)}));
+    if(s.type==='bar'){
+      const bw=Math.max(3,step*0.45);
+      s.values.forEach((v,i)=>{
+        const x=PAD.l+i*step-bw/2;
+        const barH=cH*(v/maxV);
+        const y=PAD.t+cH-barH;
+        svg+=`<rect x="${x}" y="${y}" width="${bw}" height="${barH}" rx="2" fill="${s.color}bb"/>`;
+      });
+    } else {
+      const polyA=`${PAD.l},${PAD.t+cH} `+pts.map(p=>`${p.x},${p.y}`).join(' ')+` ${pts[pts.length-1].x},${PAD.t+cH}`;
+      svg+=`<polygon points="${polyA}" fill="${s.color}" fill-opacity="0.1"/>`;
+      svg+=`<polyline points="${pts.map(p=>`${p.x},${p.y}`).join(' ')}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round"/>`;
+      pts.forEach(p=>svg+=`<circle cx="${p.x}" cy="${p.y}" r="2.5" fill="${s.color}"/>`);
+    }
+  });
+
+  // legend
+  let lx=PAD.l;
+  series.forEach(s=>{
+    svg+=`<rect x="${lx}" y="4" width="10" height="8" rx="2" fill="${s.color}cc"/>`;
+    svg+=`<text x="${lx+13}" y="12" font-size="10" fill="#9095b0">${s.label}</text>`;
+    lx+=s.label.length*6.5+26;
+  });
+
+  svg+='</svg>';
+  container.innerHTML=svg;
+}
+
+// ── TREND ─────────────────────────────────────────────────────────────────────
+function renderTrendChart(data){
+  const el=document.getElementById('trendChart');
+  const {lbls,dates}=getBuckets();
+  svgLine(el,lbls,[
+    {label:'Posts',color:'#6c63ff',values:bucketCount(data,dates,d=>d.type==='Post')},
+    {label:'Comments',color:'#00d4aa',values:bucketCount(data,dates,d=>d.type==='Comment')},
+  ]);
+}
+
+// ── UPVOTES ───────────────────────────────────────────────────────────────────
+function renderUpvotesChart(data){
+  const el=document.getElementById('upvotesChart');
+  const {lbls,dates}=getBuckets();
+  svgLine(el,lbls,[
+    {label:'Upvotes/Likes',color:'#ffd166',type:'bar',values:bucketSum(data,dates,'upvotes')},
+  ],180);
+}
+
+// ── PLATFORM (DONUT) ─────────────────────────────────────────────────────────
+function renderPlatformChart(data){
+  const el=document.getElementById('platformChart');
+  const plats=['Reddit','X','LinkedIn','Facebook','TikTok','Other'];
+  const vals=plats.map(p=>data.filter(d=>d.platform===p).length);
+  const total=vals.reduce((a,b)=>a+b,0)||1;
+  const pairs=plats.map((p,i)=>({p,v:vals[i],c:PC[p]})).filter(x=>x.v>0);
+  renderDonut(el,pairs,total);
+}
+
+// ── RANKING (DONUT) ──────────────────────────────────────────────────────────
+function renderRankingChart(data){
+  const el=document.getElementById('rankingChart');
+  const pairs=[
+    {p:'Ranking',v:data.filter(d=>d.googleRanking==='Yes').length,c:'#06d6a0'},
+    {p:'Not Ranking',v:data.filter(d=>d.googleRanking==='No').length,c:'#6b728f'},
+    {p:'Unknown',v:data.filter(d=>d.googleRanking==='Unknown').length,c:'#ffd166'},
+  ].filter(x=>x.v>0);
+  const total=pairs.reduce((s,p)=>s+p.v,0)||1;
+  renderDonut(el,pairs,total);
+}
+
+function renderDonut(el,pairs,total){
+  const R=52,r=34,cx=68,cy=70;
+  let svg=`<svg viewBox="0 0 220 ${cy*2+10}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:${cy*2+10}px;display:block;">`;
+  let angle=-Math.PI/2;
+  pairs.forEach(item=>{
+    const sweep=item.v/total*Math.PI*2;
+    const x1=cx+R*Math.cos(angle), y1=cy+R*Math.sin(angle);
+    const x2=cx+R*Math.cos(angle+sweep), y2=cy+R*Math.sin(angle+sweep);
+    const lg=sweep>Math.PI?1:0;
+    const xi1=cx+r*Math.cos(angle), yi1=cy+r*Math.sin(angle);
+    const xi2=cx+r*Math.cos(angle+sweep), yi2=cy+r*Math.sin(angle+sweep);
+    svg+=`<path d="M ${xi1} ${yi1} L ${x1} ${y1} A ${R} ${R} 0 ${lg} 1 ${x2} ${y2} L ${xi2} ${yi2} A ${r} ${r} 0 ${lg} 0 ${xi1} ${yi1} Z" fill="${item.c}cc" stroke="#141720" stroke-width="1.5"/>`;
+    angle+=sweep;
+  });
+  // centre
+  svg+=`<circle cx="${cx}" cy="${cy}" r="${r-2}" fill="#141720"/>`;
+  svg+=`<text x="${cx}" y="${cy+5}" text-anchor="middle" font-size="16" font-weight="800" fill="#e8eaf6">${total}</text>`;
+  // legend
+  pairs.forEach((item,i)=>{
+    const ly=12+i*22;
+    const lx=cx*2+8;
+    const pct=(item.v/total*100|0)+'%';
+    svg+=`<circle cx="${lx+5}" cy="${ly+5}" r="5" fill="${item.c}cc"/>`;
+    svg+=`<text x="${lx+14}" y="${ly+9}" font-size="10" fill="#9095b0">${item.p}</text>`;
+    svg+=`<text x="215" y="${ly+9}" text-anchor="end" font-size="10" font-weight="700" fill="#e8eaf6">${item.v}</text>`;
+    svg+=`<text x="215" y="${ly+20}" text-anchor="end" font-size="9" fill="#6b728f">${pct}</text>`;
+  });
+  svg+='</svg>';
+  el.innerHTML=svg;
+}
+
+// ── BRAND HBAR ────────────────────────────────────────────────────────────────
+function renderBrandChart(data){
+  const el=document.getElementById('brandChart');
+  const brands=[...new Set(data.map(d=>d.brand))];
+  const rows=brands.map(b=>({
+    b,v:data.filter(d=>d.brand===b).reduce((s,d)=>s+d.upvotes,0),
+    c:BC[b]||'#6c63ff',
+  })).sort((a,z)=>z.v-a.v).slice(0,8);
+  const max=Math.max(...rows.map(r=>r.v),1);
+  el.innerHTML=rows.map(r=>{
+    const pct=(r.v/max*100).toFixed(1);
+    return `<div class="hbar-row">
+      <div class="hbar-label" title="${r.b}">${r.b}</div>
+      <div class="hbar-track">
+        <div class="hbar-fill" style="width:${pct}%;background:${r.c};">
+          ${pct>18?`<span class="hbar-val">${r.v.toLocaleString()}</span>`:''}
+        </div>
+      </div>
+      ${pct<=18?`<span class="hbar-val-out">${r.v.toLocaleString()}</span>`:''}
+    </div>`;
+  }).join('');
+}
+
+// ── TABLE ─────────────────────────────────────────────────────────────────────
+function renderTable(data){
+  const sk=document.getElementById('fSort').value;
+  const sorted=[...data].sort((a,b)=>{
+    if(sk==='upvotes')return b.upvotes-a.upvotes;
+    if(sk==='brand')return a.brand.localeCompare(b.brand);
+    return b.date.localeCompare(a.date);
+  });
+  const total=sorted.length;
+  const pages=Math.max(1,Math.ceil(total/PS));
+  if(pg>pages)pg=1;
+  const slice=sorted.slice((pg-1)*PS,pg*PS);
+
+  document.getElementById('tcount').textContent=total+' entries';
+  document.getElementById('pagInfo').textContent=`${Math.min((pg-1)*PS+1,total)}–${Math.min(pg*PS,total)} of ${total}`;
+
+  // page buttons
+  const pb=document.getElementById('pagBtns');
+  pb.innerHTML='';
+  for(let i=1;i<=pages;i++){
+    if(pages>8&&i>2&&i<pages-1&&Math.abs(i-pg)>1){if(i===3)pb.innerHTML+='<span style="color:var(--muted);padding:2px 4px;">…</span>';continue;}
+    pb.innerHTML+=`<button class="pb ${i===pg?'active':''}" onclick="goPage(${i})">${i}</button>`;
+  }
+
+  const pc='p-'+String(()=>'').constructor; // unused
+  document.getElementById('tbody').innerHTML=slice.map(d=>{
+    const bclr=BC[d.brand]||'#6c63ff';
+    const pcls='p-'+d.platform.toLowerCase().replace(/[^a-z]/g,'');
+    return `<tr>
+      <td><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${bclr};margin-right:5px;"></span><strong>${d.brand}</strong></td>
+      <td><span class="bdg ${pcls}">${d.platform}</span></td>
+      <td><span class="${d.type==='Post'?'t-post':'t-comment'}">${d.type}</span></td>
+      <td><div class="ptitle" title="${d.title}">${d.title}</div></td>
+      <td style="color:var(--muted);white-space:nowrap">${d.date}</td>
+      <td><span class="uv">▲ ${d.upvotes.toLocaleString()}</span></td>
+      <td style="color:var(--muted)">${d.comments>0?d.comments+' 💬':'—'}</td>
+      <td><span class="${d.status==='Active'?'s-active':'s-inactive'}">${d.status==='Active'?'● Active':'○ Inactive'}</span></td>
+      <td><span class="${d.googleRanking==='Yes'?'r-yes':d.googleRanking==='No'?'r-no':'r-unknown'}">${d.googleRanking==='Yes'?'✓ Ranking':d.googleRanking==='No'?'✗ Not ranking':'? Unknown'}</span></td>
+      <td>${d.url?`<a href="${d.url}" target="_blank" class="alink">Open ↗</a>`:'—'}</td>
+      <td><button class="delbtn" onclick="del(${d.id})" title="Delete">🗑</button></td>
+    </tr>`;
+  }).join('')||`<tr><td colspan="11" style="text-align:center;padding:28px;color:var(--muted);">No entries match your filters</td></tr>`;
+}
+
+function goPage(p){pg=p;applyFilters();}
+function del(id){allData=allData.filter(d=>d.id!==id);applyFilters();toast('Entry deleted');}
+
+// ── MODAL ─────────────────────────────────────────────────────────────────────
+function openModal(){document.getElementById('mDate').value=new Date().toISOString().slice(0,10);document.getElementById('overlay').classList.add('open');}
+function closeModal(){document.getElementById('overlay').classList.remove('open');}
+function saveEntry(){
+  const brand=document.getElementById('mBrand').value.trim();
+  const title=document.getElementById('mTitle').value.trim();
+  if(!brand||!title){toast('⚠ Brand and Title required');return;}
+  if(!BC[brand]){BC[brand]=EXTRA[Object.keys(BC).length%EXTRA.length];}
+  allData.unshift({id:Date.now(),brand,platform:document.getElementById('mPlat').value,type:document.getElementById('mType').value,title,date:document.getElementById('mDate').value,upvotes:parseInt(document.getElementById('mUp').value)||0,comments:parseInt(document.getElementById('mCom').value)||0,status:document.getElementById('mStat').value,googleRanking:document.getElementById('mRank').value,url:document.getElementById('mURL').value.trim()});
+  closeModal();populateBrandFilter();applyFilters();toast('✓ Entry saved');
+}
+
+// ── CSV ───────────────────────────────────────────────────────────────────────
+function importCSV(e){
+  const file=e.target.files[0];if(!file)return;
+  const fr=new FileReader();
+  fr.onload=ev=>{
+    const lines=ev.target.result.split('\n').filter(l=>l.trim());
+    const hdrs=lines[0].split(',').map(h=>h.trim().toLowerCase().replace(/[\s"]/g,''));
+    let n=0;
+    for(let i=1;i<lines.length;i++){
+      const v=lines[i].split(',').map(x=>x.trim().replace(/^"|"$/g,''));
+      const row={};hdrs.forEach((h,j)=>row[h]=v[j]||'');
+      if(!row.brand||!row.title)continue;
+      allData.unshift({id:Date.now()+i,brand:row.brand,platform:row.platform||'Reddit',type:row.type||'Post',title:row.title,date:row.date||new Date().toISOString().slice(0,10),upvotes:parseInt(row.upvotes)||0,comments:parseInt(row.comments)||0,status:row.status||'Active',googleRanking:row.googleranking||'Unknown',url:row.url||''});
+      n++;
+    }
+    populateBrandFilter();applyFilters();toast('✓ Imported '+n+' entries');e.target.value='';
+  };
+  fr.readAsText(file);
+}
+function exportCSV(){
+  const rows=getF().map(d=>[d.brand,d.platform,d.type,`"${d.title}"`,d.date,d.upvotes,d.comments,d.status,d.googleRanking,d.url].join(','));
+  const csv=['Brand,Platform,Type,Title,Date,Upvotes,Comments,Status,GoogleRanking,URL',...rows].join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='adly_social_media.csv';a.click();toast('✓ CSV exported');
+}
+function downloadTemplate(){
+  const csv='Brand,Platform,Type,Title,Date,Upvotes,Comments,Status,GoogleRanking,URL\nNexaflow,Reddit,Post,Our community announcement,2026-05-01,250,18,Active,No,https://reddit.com/r/example\n';
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='adly_template.csv';a.click();toast('✓ Template downloaded');
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────────────────
+let tt;
+function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>el.classList.remove('show'),3000);}
+
+// ── BOOT ──────────────────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
