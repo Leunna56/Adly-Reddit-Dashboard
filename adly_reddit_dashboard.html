@@ -364,13 +364,24 @@ function render() {
   const isRemoved = r => r.status.trim().toLowerCase() === 'removed';
 
   // --- Weekly Summary (always uses full RAW data, last 7 vs prev 7 days) ---
+  // Anchor to May 4, 2026 — periods snap to 14-day blocks from this date
+  const ANCHOR = new Date(2026, 4, 4); // May 4, 2026
+  const MS_DAY = 86400000;
   const today = new Date();
-  const periodEnd   = new Date(today); periodEnd.setDate(today.getDate() - (biWeekOffset * 14));
-  const periodStart = new Date(periodEnd); periodStart.setDate(periodEnd.getDate() - 14);
-  const prevEnd     = new Date(periodStart);
-  const prevStart   = new Date(prevEnd); prevStart.setDate(prevEnd.getDate() - 14);
+  const daysSinceAnchor = Math.floor((today - ANCHOR) / MS_DAY);
+  const completedPeriods = Math.floor(daysSinceAnchor / 14);
+
+  // biWeekOffset 0 = most recently completed period
+  const periodIdx  = completedPeriods - 1 - biWeekOffset;
+  const prevIdx    = periodIdx - 1;
+
+  const periodStart = new Date(ANCHOR.getTime() + periodIdx * 14 * MS_DAY);
+  const periodEnd   = new Date(ANCHOR.getTime() + (periodIdx + 1) * 14 * MS_DAY - MS_DAY);
+  const prevStart   = new Date(ANCHOR.getTime() + prevIdx * 14 * MS_DAY);
+  const prevEnd     = new Date(ANCHOR.getTime() + (prevIdx + 1) * 14 * MS_DAY - MS_DAY);
+
   const thisWeek = RAW.filter(r => r.date >= periodStart && r.date <= periodEnd);
-  const lastWeek = RAW.filter(r => r.date >= prevStart && r.date < prevEnd);
+  const lastWeek = RAW.filter(r => r.date >= prevStart && r.date <= prevEnd);
   const currentPeriodLabel = formatDateRange(periodStart, periodEnd);
   const prevPeriodLabel    = formatDateRange(prevStart, prevEnd);
 
