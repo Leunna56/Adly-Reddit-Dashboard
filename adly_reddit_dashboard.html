@@ -433,21 +433,69 @@ function render() {
   if (!lowlights.length && thisWeek.length > 0) lowlights.push('No major issues this week — keep it up!');
   if (!lowlights.length) lowlights.push('No data found for this week.');
 
-  // Action items
+  // Action items — strategic & analytical
   const actions = [];
   if (thisWeek.length > 0) {
+
+    // Brands with poor survival
     const poorBrands = weekBrands.filter(([,d]) => d.total >= 2 && d.live/d.total < 0.5);
-    poorBrands.forEach(([n,d]) => actions.push(`Review subreddit selection and post style for <strong>${n}</strong> — only ${Math.round(d.live/d.total*100)}% survival rate this week`));
+    poorBrands.forEach(([n,d]) => {
+      const rate = Math.round(d.live/d.total*100);
+      const postRate = d.posts ? Math.round(d.postsLive/d.posts*100) : null;
+      const commentRate = d.comments ? Math.round(d.commentsLive/d.comments*100) : null;
+      let rec = `<strong>${n}</strong> has a ${rate}% survival rate this period. `;
+      if (postRate !== null && commentRate !== null) {
+        if (postRate < commentRate) rec += `Posts (${postRate}%) are surviving worse than comments (${commentRate}%) — shift focus to commenting on existing threads rather than creating new posts, which attract less mod scrutiny. `;
+        else if (commentRate < postRate) rec += `Comments (${commentRate}%) are being removed more than posts (${postRate}%) — review comment tone and ensure they don't read as promotional. Add value to the conversation before mentioning the brand. `;
+      }
+      rec += `Test posting in smaller, niche subreddits with less active moderation, and warm up Reddit accounts with 1–2 weeks of organic activity before promoting.`;
+      actions.push(rec);
+    });
+
+    // High removal brands not already covered
     const highRemoval = weekBrands.filter(([,d]) => d.removed >= 3);
-    highRemoval.forEach(([n]) => { if (!poorBrands.find(([pn]) => pn===n)) actions.push(`Investigate which subreddits are removing <strong>${n}</strong> posts and avoid them`); });
-    if (survivalChange < 0) actions.push('Audit recent removed posts to identify patterns — are specific subreddits or post types getting flagged?');
+    highRemoval.forEach(([n,d]) => {
+      if (!poorBrands.find(([pn]) => pn===n)) {
+        // Find which subreddits this brand was removed in
+        const removedSubs = thisWeek.filter(r => r.brand===n && isRemoved(r)).reduce((acc,r) => {
+          acc[r.subreddit] = (acc[r.subreddit]||0)+1; return acc;
+        }, {});
+        const topRemovedSub = Object.entries(removedSubs).sort((a,b)=>b[1]-a[1])[0];
+        actions.push(`<strong>${n}</strong> had ${d.removed} removals this period${topRemovedSub ? ` — most in <strong>${topRemovedSub[0]}</strong>` : ''}. Strategy: rotate to different subreddits in the same niche, rewrite post titles to be less salesy and more question-based, and ensure the Reddit account used has sufficient karma and account age before posting.`);
+      }
+    });
+
+    // Overall survival drop
+    if (survivalChange < -5) {
+      actions.push(`Survival rate dropped <strong>${Math.abs(survivalChange)}%</strong> this period. Conduct a post-mortem: cross-reference which subreddits had the most removals, check if Reddit updated community rules, and consider A/B testing post formats — organic-sounding questions tend to survive longer than direct recommendations.`);
+    }
+
+    // Activity drop
+    if (thisWeek.length < lastWeek.length && lastWeek.length > 0) {
+      const drop = lastWeek.length - thisWeek.length;
+      actions.push(`Activity dropped by <strong>${drop} entries</strong> vs the previous period. Consistency is key for Reddit SEO — reduced activity means fewer indexed posts and slower rank accumulation. Set a minimum weekly posting quota per brand to maintain momentum.`);
+    }
+
+    // Low activity brands
     const lowActivity = Object.entries(weekBrandStats).filter(([,d]) => d.total === 1);
-    if (lowActivity.length) actions.push(`Increase posting frequency for: <strong>${lowActivity.map(([n]) => n).join(', ')}</strong> — only 1 entry this period`);
+    if (lowActivity.length) {
+      actions.push(`<strong>${lowActivity.map(([n])=>n).join(', ')}</strong> had only 1 entry this period. For meaningful Google ranking impact, aim for at least 3–5 posts/comments per brand per bi-weekly period across multiple subreddits to increase indexing chances.`);
+    }
+
+    // Strong brands — scale up strategically
     const strongBrands = weekBrands.filter(([,d]) => d.total >= 3 && d.live/d.total >= 0.9);
-    if (strongBrands.length) actions.push(`Scale up activity for <strong>${strongBrands.map(([n]) => n).join(', ')}</strong> — high survival rate, room to grow`);
-    if (!actions.length) actions.push('Maintain current strategy — results look solid this week');
+    if (strongBrands.length) {
+      actions.push(`<strong>${strongBrands.map(([n])=>n).join(', ')}</strong> are performing well with 90%+ survival. Double down: identify which subreddits are accepting their content and expand to similar communities. Also prioritize getting upvotes on their existing live posts to improve Google ranking position.`);
+    }
+
+    // No rankings this period
+    if (twRankings === 0 && lwRankings > 0) {
+      actions.push(`No new Google rankings recorded this period vs ${lwRankings} last period. Focus on high-intent keyword threads — search Google for "[brand] reddit" and "[brand] review reddit" to find threads worth engaging with, as these are already ranking and will amplify your comments.`);
+    }
+
+    if (!actions.length) actions.push('Strategy is on track — survival rates are strong and activity is consistent. Focus on expanding to new subreddits and securing upvotes on live posts to improve Google ranking positions.');
   } else {
-    actions.push('Add this week\'s entries to your Google Sheet to get action items');
+    actions.push('No entries found for this period. Add data to your Google Sheet to generate strategic recommendations.');
   }
 
   const total    = data.length;
