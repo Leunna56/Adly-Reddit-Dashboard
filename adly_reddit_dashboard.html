@@ -159,33 +159,46 @@ function loadEmbedded() {
 
 async function fetchFromSheets() {
   const status = document.getElementById('syncStatus');
-  // Show embedded data instantly
   const hasEmbedded = loadEmbedded();
-  if (hasEmbedded) {
-    status.textContent = '⏳ Checking for updates…';
-  } else {
-    status.textContent = '⏳ Loading…';
-  }
-  try {
-    const url = SHEETS_CSV_URL + '&_=' + Date.now();
-    const res = await fetch(url, { method:'GET', redirect:'follow', cache:'no-store' });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const text = await res.text();
-    if (!text || text.trim().length < 10) throw new Error('Empty response');
-    parseCSV(text);
-    const now = new Date();
-    status.textContent = '✅ Live · ' + now.toLocaleDateString([],{month:'short',day:'numeric'});
-    document.getElementById('fileLabel').textContent = 'Adly Reddit Project · Live Data';
-  } catch(e) {
-    if (hasEmbedded) {
-      status.textContent = '📋 Embedded data · May 29';
-    } else {
-      status.textContent = '⚠️ No data — load a CSV';
-      const es = document.getElementById('emptyState');
-      if (es) es.innerHTML = `<div class="icon">📊</div><h2>Could not load data</h2>
-        <p>Load a CSV manually to get started.</p>
-        <button class="cta" onclick="document.getElementById('fileInput').click()">📂 Choose CSV File</button>`;
+  status.textContent = '⏳ Checking for updates…';
+
+  // Try direct URL first, then fall back to CORS proxy
+  const urls = [
+    SHEETS_CSV_URL + '&_=' + Date.now(),
+    'https://corsproxy.io/?' + encodeURIComponent(SHEETS_CSV_URL + '&_=' + Date.now()),
+    'https://api.allorigins.win/raw?url=' + encodeURIComponent(SHEETS_CSV_URL)
+  ];
+
+  for (const url of urls) {
+    try {
+      console.log('Trying fetch:', url.substring(0, 80));
+      const res = await fetch(url, { method:'GET', redirect:'follow', cache:'no-store' });
+      console.log('Response status:', res.status, res.ok);
+      if (!res.ok) { console.warn('Not OK, trying next...'); continue; }
+      const text = await res.text();
+      console.log('Response length:', text.length, 'First 100 chars:', text.substring(0,100));
+      if (!text || text.trim().length < 10 || text.trim().startsWith('<')) {
+        console.warn('Response looks like HTML or empty, trying next...');
+        continue;
+      }
+      parseCSV(text);
+      if (RAW.length < 100) { console.warn('Too few rows parsed, trying next...'); continue; }
+      const now = new Date();
+      status.textContent = '✅ Live · ' + now.toLocaleDateString([],{month:'short',day:'numeric'});
+      document.getElementById('fileLabel').textContent = 'Adly Reddit Project · Live Data';
+      console.log('Success! Loaded', RAW.length, 'rows');
+      return;
+    } catch(e) {
+      console.warn('Fetch failed for URL:', e.message);
     }
+  }
+
+  // All URLs failed
+  console.error('All fetch attempts failed — using embedded data');
+  if (hasEmbedded) {
+    status.textContent = '📋 Embedded data · May 29';
+  } else {
+    status.textContent = '⚠️ No data — load a CSV';
   }
 }
 
