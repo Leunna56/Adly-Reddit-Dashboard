@@ -420,6 +420,8 @@ function render() {
   const thisWeekSurvival = thisWeek.length ? Math.round(thisWeek.filter(isLive).length / thisWeek.length * 100) : 0;
   const lastWeekSurvival = lastWeek.length ? Math.round(lastWeek.filter(isLive).length / lastWeek.length * 100) : 0;
   const survivalChange = thisWeekSurvival - lastWeekSurvival;
+  const twRankings = thisWeek.filter(r => r.ranking).length;
+  const lwRankings = lastWeek.filter(r => r.ranking).length;
 
   // Highlights
   const highlights = [];
@@ -641,7 +643,6 @@ function render() {
         const twRemoved = tw.filter(isRemoved).length, lwRemoved = lw.filter(isRemoved).length;
         const twSurv = twTotal ? Math.round(twLive/twTotal*100) : 0;
         const lwSurv = lwTotal ? Math.round(lwLive/lwTotal*100) : 0;
-        const twRankings = tw.filter(r=>r.ranking).length, lwRankings = lw.filter(r=>r.ranking).length;
 
         // Top subreddit this period
         const twSubMap = {};
