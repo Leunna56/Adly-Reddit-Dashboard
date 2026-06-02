@@ -792,42 +792,42 @@ function render() {
 
         return `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin:16px 0 24px">
           <div style="background:#f9fafb;border-radius:10px;padding:14px">
-            <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.5px">Survival Rate</div>
+            <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.5px">Survival Rate <span class="tip" title="The most important signal. If posts and comments are getting removed frequently, Reddit's moderators or spam filters are catching you. You want this trending upward over time.">ℹ️</span></div>
             <div style="font-size:28px;font-weight:800;color:#111827;margin:6px 0 2px">${twSurv}% ${arrow(twSurv,lwSurv)}</div>
             <div style="font-size:12px">${diff(twSurv,lwSurv,'%')}</div>
             <div style="font-size:11px;color:#9ca3af;margin-top:4px">Prev: ${lwSurv}%</div>
           </div>
           <div style="background:#f9fafb;border-radius:10px;padding:14px">
-            <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.5px">Currently Live</div>
+            <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.5px">Currently Live <span class="tip" title="Total posts and comments still live on Reddit this period. Higher is better — it means your content is surviving moderation.">ℹ️</span></div>
             <div style="font-size:28px;font-weight:800;color:#10b981;margin:6px 0 2px">${twLive.toLocaleString()} ${arrow(twLive,lwLive)}</div>
             <div style="font-size:12px">${diff(twLive,lwLive)}</div>
             <div style="font-size:11px;color:#9ca3af;margin-top:4px">Prev: ${lwLive.toLocaleString()}</div>
           </div>
           <div style="background:#f9fafb;border-radius:10px;padding:14px">
-            <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.5px">Removed</div>
+            <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.5px">Removed <span class="tip" title="Posts and comments removed by Reddit moderators or spam filters. High removal rates signal you need to change subreddits, post style, or account warm-up strategy.">ℹ️</span></div>
             <div style="font-size:28px;font-weight:800;color:#ef4444;margin:6px 0 2px">${twRemoved.toLocaleString()} ${arrow(lwRemoved,twRemoved)}</div>
             <div style="font-size:12px">${diff(lwRemoved,twRemoved)} removals</div>
             <div style="font-size:11px;color:#9ca3af;margin-top:4px">Prev: ${lwRemoved.toLocaleString()}</div>
           </div>
           <div style="background:#f9fafb;border-radius:10px;padding:14px">
-            <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.5px">Activity</div>
+            <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.5px">Activity <span class="tip" title="Are you consistently posting week over week? Consistency matters for building Reddit credibility and accumulating indexed content for Google.">ℹ️</span></div>
             <div style="font-size:28px;font-weight:800;color:#111827;margin:6px 0 2px">${twTotal.toLocaleString()} ${arrow(twTotal,lwTotal)}</div>
             <div style="font-size:12px">${diff(twTotal,lwTotal)} entries</div>
             <div style="font-size:11px;color:#9ca3af;margin-top:4px">Prev: ${lwTotal.toLocaleString()}</div>
           </div>
           <div style="background:#f9fafb;border-radius:10px;padding:14px">
-            <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.5px">Google Rankings</div>
+            <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.5px">Google Rankings <span class="tip" title="The ultimate goal. If your Reddit posts are showing up in Google search results for brand-related searches, that's direct SEO value. Track which brands are ranking and in which position.">ℹ️</span></div>
             <div style="font-size:28px;font-weight:800;color:#f59e0b;margin:6px 0 2px">${twRankings} ${arrow(twRankings,lwRankings)}</div>
             <div style="font-size:12px">${diff(twRankings,lwRankings)} ranking mentions</div>
             <div style="font-size:11px;color:#9ca3af;margin-top:4px">Prev: ${lwRankings}</div>
           </div>
           <div style="background:#f9fafb;border-radius:10px;padding:14px">
-            <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.5px">Top Subreddit</div>
+            <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.5px">Top Subreddit <span class="tip" title="Which subreddit had the most activity this period. High survival rate in a subreddit means it's receptive to your content — double down there.">ℹ️</span></div>
             <div style="font-size:18px;font-weight:800;color:#3b82f6;margin:6px 0 2px">${topSub ? topSub[0] : '—'}</div>
             <div style="font-size:12px;color:#6b7280">${topSub ? topSub[1]+' entries this period' : 'No data'}</div>
           </div>
           <div style="background:#f9fafb;border-radius:10px;padding:14px">
-            <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.5px">Top Brand</div>
+            <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.5px">Top Brand <span class="tip" title="The brand with the highest survival rate this period (minimum 3 entries). This brand's current subreddit and posting strategy is working — use it as a template for others.">ℹ️</span></div>
             <div style="font-size:18px;font-weight:800;color:#8b5cf6;margin:6px 0 2px">${topBrandEntry ? topBrandEntry[0] : '—'}</div>
             <div style="font-size:12px;color:#6b7280">${topBrandEntry ? Math.round(topBrandEntry[1].live/topBrandEntry[1].total*100)+'% survival this period' : 'No data'}</div>
           </div>
