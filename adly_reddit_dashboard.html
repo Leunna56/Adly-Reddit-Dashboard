@@ -351,6 +351,78 @@ function render() {
   const isLive    = r => r.status.trim().toLowerCase() === 'live';
   const isRemoved = r => r.status.trim().toLowerCase() === 'removed';
 
+  // --- Weekly Summary (always uses full RAW data, last 7 vs prev 7 days) ---
+  const today = new Date();
+  const day7  = new Date(today); day7.setDate(today.getDate() - 7);
+  const day14 = new Date(today); day14.setDate(today.getDate() - 14);
+  const thisWeek = RAW.filter(r => r.date >= day7);
+  const lastWeek = RAW.filter(r => r.date >= day14 && r.date < day7);
+
+  // Brand-level stats for this week vs last week
+  const weekBrandStats = {};
+  thisWeek.forEach(r => {
+    if (!r.brand) return;
+    if (!weekBrandStats[r.brand]) weekBrandStats[r.brand] = { total:0, live:0, removed:0, newRankings:[] };
+    weekBrandStats[r.brand].total++;
+    if (isLive(r)) weekBrandStats[r.brand].live++;
+    if (isRemoved(r)) weekBrandStats[r.brand].removed++;
+    if (r.ranking) weekBrandStats[r.brand].newRankings.push(r.ranking);
+  });
+  const lastWeekBrandStats = {};
+  lastWeek.forEach(r => {
+    if (!r.brand) return;
+    if (!lastWeekBrandStats[r.brand]) lastWeekBrandStats[r.brand] = { total:0, live:0 };
+    lastWeekBrandStats[r.brand].total++;
+    if (isLive(r)) lastWeekBrandStats[r.brand].live++;
+  });
+
+  const weekBrands = Object.entries(weekBrandStats).sort((a,b) => b[1].total - a[1].total);
+  const thisWeekSurvival = thisWeek.length ? Math.round(thisWeek.filter(isLive).length / thisWeek.length * 100) : 0;
+  const lastWeekSurvival = lastWeek.length ? Math.round(lastWeek.filter(isLive).length / lastWeek.length * 100) : 0;
+  const survivalChange = thisWeekSurvival - lastWeekSurvival;
+
+  // Highlights
+  const highlights = [];
+  if (thisWeek.length > 0) {
+    if (survivalChange > 0) highlights.push(`Overall survival rate improved by <strong>${survivalChange}%</strong> vs last week (${lastWeekSurvival}% → ${thisWeekSurvival}%)`);
+    const topBrand = weekBrands.find(([,d]) => d.total >= 3 && d.total ? d.live/d.total >= 0.9 : false);
+    if (topBrand) highlights.push(`<strong>${topBrand[0]}</strong> had a strong week with ${Math.round(topBrand[1].live/topBrand[1].total*100)}% survival rate (${topBrand[1].live} live out of ${topBrand[1].total})`);
+    const newRankBrands = weekBrands.filter(([,d]) => d.newRankings.length > 0);
+    if (newRankBrands.length) highlights.push(`New Google rankings recorded for: <strong>${newRankBrands.map(([n,d]) => `${n} (${d.newRankings[0]})`).join(', ')}</strong>`);
+    if (thisWeek.length > lastWeek.length) highlights.push(`Activity increased this week — <strong>${thisWeek.length} entries</strong> vs ${lastWeek.length} last week`);
+  }
+  if (!highlights.length) highlights.push('No data found for this week. Add entries to your Google Sheet to see highlights.');
+
+  // Lowlights
+  const lowlights = [];
+  if (thisWeek.length > 0) {
+    if (survivalChange < -5) lowlights.push(`Overall survival rate dropped <strong>${Math.abs(survivalChange)}%</strong> vs last week (${lastWeekSurvival}% → ${thisWeekSurvival}%)`);
+    const poorBrands = weekBrands.filter(([,d]) => d.total >= 2 && d.live/d.total < 0.5);
+    if (poorBrands.length) lowlights.push(`Low survival rate this week: <strong>${poorBrands.map(([n,d]) => `${n} (${Math.round(d.live/d.total*100)}%)`).join(', ')}</strong>`);
+    const highRemoval = weekBrands.filter(([,d]) => d.removed >= 3);
+    if (highRemoval.length) lowlights.push(`High removals this week: <strong>${highRemoval.map(([n,d]) => `${n} (${d.removed} removed)`).join(', ')}</strong>`);
+    if (thisWeek.length < lastWeek.length && lastWeek.length > 0) lowlights.push(`Activity dropped this week — <strong>${thisWeek.length} entries</strong> vs ${lastWeek.length} last week`);
+  }
+  if (!lowlights.length && thisWeek.length > 0) lowlights.push('No major issues this week — keep it up!');
+  if (!lowlights.length) lowlights.push('No data found for this week.');
+
+  // Action items
+  const actions = [];
+  if (thisWeek.length > 0) {
+    const poorBrands = weekBrands.filter(([,d]) => d.total >= 2 && d.live/d.total < 0.5);
+    poorBrands.forEach(([n,d]) => actions.push(`Review subreddit selection and post style for <strong>${n}</strong> — only ${Math.round(d.live/d.total*100)}% survival rate this week`));
+    const highRemoval = weekBrands.filter(([,d]) => d.removed >= 3);
+    highRemoval.forEach(([n]) => { if (!poorBrands.find(([pn]) => pn===n)) actions.push(`Investigate which subreddits are removing <strong>${n}</strong> posts and avoid them`); });
+    if (survivalChange < 0) actions.push('Audit recent removed posts to identify patterns — are specific subreddits or post types getting flagged?');
+    const lowActivity = Object.entries(weekBrandStats).filter(([,d]) => d.total === 1);
+    if (lowActivity.length) actions.push(`Increase posting frequency for: <strong>${lowActivity.map(([n]) => n).join(', ')}</strong> — only 1 entry this week`);
+    const strongBrands = weekBrands.filter(([,d]) => d.total >= 3 && d.live/d.total >= 0.9);
+    if (strongBrands.length) actions.push(`Scale up activity for <strong>${strongBrands.map(([n]) => n).join(', ')}</strong> — high survival rate, room to grow`);
+    if (!actions.length) actions.push('Maintain current strategy — results look solid this week');
+  } else {
+    actions.push('Add this week\'s entries to your Google Sheet to get action items');
+  }
+
   const total    = data.length;
   const posts    = data.filter(r => r.type === 'Post').length;
   const comments = data.filter(r => r.type === 'Comment').length;
@@ -455,6 +527,24 @@ function render() {
         }).join('')}
       </div>
     </div>` : ''}
+
+    <div class="card" style="margin-bottom:24px;border-left:4px solid #ff4500">
+      <h2>📋 Weekly Summary <span style="font-size:12px;font-weight:400;color:#9ca3af;margin-left:8px">Last 7 days vs previous 7 days</span></h2>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-top:16px">
+        <div>
+          <div style="font-size:12px;font-weight:700;color:#10b981;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">✅ Highlights</div>
+          ${highlights.map(h => `<div style="font-size:13px;color:#374151;margin-bottom:8px;padding-left:12px;border-left:3px solid #10b981;line-height:1.5">${h}</div>`).join('')}
+        </div>
+        <div>
+          <div style="font-size:12px;font-weight:700;color:#ef4444;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">⚠️ Lowlights</div>
+          ${lowlights.map(l => `<div style="font-size:13px;color:#374151;margin-bottom:8px;padding-left:12px;border-left:3px solid #ef4444;line-height:1.5">${l}</div>`).join('')}
+        </div>
+        <div>
+          <div style="font-size:12px;font-weight:700;color:#f59e0b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">🎯 Action Items</div>
+          ${actions.map(a => `<div style="font-size:13px;color:#374151;margin-bottom:8px;padding-left:12px;border-left:3px solid #f59e0b;line-height:1.5">${a}</div>`).join('')}
+        </div>
+      </div>
+    </div>
 
     <div class="charts">
       <div class="card"><h2>📈 Activity Over Time</h2><canvas id="trendChart"></canvas></div>
