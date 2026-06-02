@@ -116,6 +116,18 @@ const SHEETS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTRP0EvI
 let RAW = [];
 let period = 'all';
 let trendChart, brandChart, lrChart;
+let biWeekOffset = 0; // 0 = most recent 14 days, 1 = previous, etc.
+
+function formatDateRange(start, end) {
+  const opts = { month: 'short', day: 'numeric', year: 'numeric' };
+  return start.toLocaleDateString('en-US', opts) + ' – ' + end.toLocaleDateString('en-US', opts);
+}
+
+function shiftBiWeek(dir) {
+  biWeekOffset += dir;
+  if (biWeekOffset < 0) biWeekOffset = 0;
+  render();
+}
 
 function loadEmbedded() {
   if (typeof EMBEDDED_DATA === 'undefined' || !EMBEDDED_DATA.length) return false;
@@ -353,12 +365,16 @@ function render() {
 
   // --- Weekly Summary (always uses full RAW data, last 7 vs prev 7 days) ---
   const today = new Date();
-  const day14  = new Date(today); day14.setDate(today.getDate() - 14);
-  const day28 = new Date(today); day28.setDate(today.getDate() - 28);
-  const thisWeek = RAW.filter(r => r.date >= day14);
-  const lastWeek = RAW.filter(r => r.date >= day28 && r.date < day14);
+  const periodEnd   = new Date(today); periodEnd.setDate(today.getDate() - (biWeekOffset * 14));
+  const periodStart = new Date(periodEnd); periodStart.setDate(periodEnd.getDate() - 14);
+  const prevEnd     = new Date(periodStart);
+  const prevStart   = new Date(prevEnd); prevStart.setDate(prevEnd.getDate() - 14);
+  const thisWeek = RAW.filter(r => r.date >= periodStart && r.date <= periodEnd);
+  const lastWeek = RAW.filter(r => r.date >= prevStart && r.date < prevEnd);
+  const currentPeriodLabel = formatDateRange(periodStart, periodEnd);
+  const prevPeriodLabel    = formatDateRange(prevStart, prevEnd);
 
-  // Brand-level stats for this week vs last week
+  // Brand-level stats for this week vs prev period
   const weekBrandStats = {};
   thisWeek.forEach(r => {
     if (!r.brand) return;
@@ -384,7 +400,7 @@ function render() {
   // Highlights
   const highlights = [];
   if (thisWeek.length > 0) {
-    if (survivalChange > 0) highlights.push(`Overall survival rate improved by <strong>${survivalChange}%</strong> vs last week (${lastWeekSurvival}% → ${thisWeekSurvival}%)`);
+    if (survivalChange > 0) highlights.push(`Overall survival rate improved by <strong>${survivalChange}%</strong> vs prev period (${lastWeekSurvival}% → ${thisWeekSurvival}%)`);
     const topBrand = weekBrands.find(([,d]) => d.total >= 3 && d.total ? d.live/d.total >= 0.9 : false);
     if (topBrand) highlights.push(`<strong>${topBrand[0]}</strong> had a strong week with ${Math.round(topBrand[1].live/topBrand[1].total*100)}% survival rate (${topBrand[1].live} live out of ${topBrand[1].total})`);
     const newRankBrands = weekBrands.filter(([,d]) => d.newRankings.length > 0);
@@ -396,7 +412,7 @@ function render() {
   // Lowlights
   const lowlights = [];
   if (thisWeek.length > 0) {
-    if (survivalChange < -5) lowlights.push(`Overall survival rate dropped <strong>${Math.abs(survivalChange)}%</strong> vs last week (${lastWeekSurvival}% → ${thisWeekSurvival}%)`);
+    if (survivalChange < -5) lowlights.push(`Overall survival rate dropped <strong>${Math.abs(survivalChange)}%</strong> vs prev period (${lastWeekSurvival}% → ${thisWeekSurvival}%)`);
     const poorBrands = weekBrands.filter(([,d]) => d.total >= 2 && d.live/d.total < 0.5);
     if (poorBrands.length) lowlights.push(`Low survival rate this week: <strong>${poorBrands.map(([n,d]) => `${n} (${Math.round(d.live/d.total*100)}%)`).join(', ')}</strong>`);
     const highRemoval = weekBrands.filter(([,d]) => d.removed >= 3);
@@ -415,7 +431,7 @@ function render() {
     highRemoval.forEach(([n]) => { if (!poorBrands.find(([pn]) => pn===n)) actions.push(`Investigate which subreddits are removing <strong>${n}</strong> posts and avoid them`); });
     if (survivalChange < 0) actions.push('Audit recent removed posts to identify patterns — are specific subreddits or post types getting flagged?');
     const lowActivity = Object.entries(weekBrandStats).filter(([,d]) => d.total === 1);
-    if (lowActivity.length) actions.push(`Increase posting frequency for: <strong>${lowActivity.map(([n]) => n).join(', ')}</strong> — only 1 entry this week`);
+    if (lowActivity.length) actions.push(`Increase posting frequency for: <strong>${lowActivity.map(([n]) => n).join(', ')}</strong> — only 1 entry this period`);
     const strongBrands = weekBrands.filter(([,d]) => d.total >= 3 && d.live/d.total >= 0.9);
     if (strongBrands.length) actions.push(`Scale up activity for <strong>${strongBrands.map(([n]) => n).join(', ')}</strong> — high survival rate, room to grow`);
     if (!actions.length) actions.push('Maintain current strategy — results look solid this week');
@@ -529,7 +545,21 @@ function render() {
     </div>` : ''}
 
     <div class="card" style="margin-bottom:24px;border-left:4px solid #ff4500">
-      <h2>📋 Bi-Weekly Summary <span style="font-size:12px;font-weight:400;color:#9ca3af;margin-left:8px">Last 14 days vs previous 14 days</span></h2>
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+        <div>
+          <h2 style="margin:0">📋 Bi-Weekly Summary</h2>
+          <div style="font-size:12px;color:#9ca3af;margin-top:4px">
+            <strong style="color:#374151">${currentPeriodLabel}</strong>
+            <span style="margin:0 6px">vs</span>
+            ${prevPeriodLabel}
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button onclick="shiftBiWeek(1)" style="padding:6px 14px;border:1px solid #d1d5db;border-radius:8px;background:white;cursor:pointer;font-size:13px">◀ Previous</button>
+          ${biWeekOffset > 0 ? `<button onclick="shiftBiWeek(-1)" style="padding:6px 14px;border:1px solid #d1d5db;border-radius:8px;background:white;cursor:pointer;font-size:13px">Next ▶</button>` : ''}
+          ${biWeekOffset > 0 ? `<button onclick="biWeekOffset=0;render()" style="padding:6px 14px;border:1px solid #ff4500;border-radius:8px;background:white;cursor:pointer;font-size:13px;color:#ff4500">Current</button>` : ''}
+        </div>
+      </div>
 
       ${(() => {
         // Trend KPIs
