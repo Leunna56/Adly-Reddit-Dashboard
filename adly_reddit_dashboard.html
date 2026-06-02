@@ -8,6 +8,11 @@
 <script src="data.js"></script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
+.tooltip-wrap { position: relative; display: inline-block; margin-left: 6px; cursor: help; }
+.tooltip-wrap .tooltip-icon { font-size: 12px; color: #9ca3af; background: #f3f4f6; border-radius: 50%; width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; }
+.tooltip-wrap .tooltip-box { visibility: hidden; opacity: 0; transition: opacity .15s; position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: #1f2937; color: white; font-size: 12px; line-height: 1.5; padding: 10px 14px; border-radius: 8px; width: 260px; z-index: 100; font-weight: 400; pointer-events: none; }
+.tooltip-wrap .tooltip-box::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 6px solid transparent; border-top-color: #1f2937; }
+.tooltip-wrap:hover .tooltip-box { visibility: visible; opacity: 1; }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f2f5; color: #1a1a2e; }
 header { background: linear-gradient(135deg, #ff4500 0%, #ff6534 100%); color: white; padding: 20px 28px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
 header h1 { font-size: 22px; font-weight: 700; }
@@ -729,22 +734,21 @@ function render() {
     </div>
 
     <div class="charts">
-      <div class="card"><h2>📈 Activity Over Time</h2><p style="font-size:12px;color:#9ca3af;margin:-10px 0 14px">Are you consistently posting week over week? Consistency matters for building Reddit credibility.</p><canvas id="trendChart"></canvas></div>
-      <div class="card"><h2>🏷️ Volume by Brand</h2><p style="font-size:12px;color:#9ca3af;margin:-10px 0 14px">Are you putting enough effort behind each brand? Some brands may be underserved.</p><canvas id="brandChart" style="max-height:280px"></canvas><div id="brandLegend" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:14px"></div></div>
+      <div class="card"><h2>📈 Activity Over Time <span class="tooltip-wrap"><span class="tooltip-icon">?</span><span class="tooltip-box">Are you consistently posting week over week? Consistency matters for building Reddit credibility.</span></span></h2><canvas id="trendChart"></canvas></div>
+      <div class="card"><h2>🏷️ Volume by Brand <span class="tooltip-wrap"><span class="tooltip-icon">?</span><span class="tooltip-box">Are you putting enough effort behind each brand? Some brands may be underserved.</span></span></h2><canvas id="brandChart" style="max-height:280px"></canvas><div id="brandLegend" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:14px"></div></div>
     </div>
 
-    <div class="card" style="margin-bottom:24px"><h2>🔗 Posts &amp; Comments by Brand</h2><p style="font-size:12px;color:#9ca3af;margin:-10px 0 14px">Tells you which brands are getting better traction on Reddit. Brands with high removal rates may need a different approach — different subreddits or posting style.</p><div id="statusBars"></div><div id="brandBreakChart"></div></div>
+    <div class="card" style="margin-bottom:24px"><h2>🔗 Posts &amp; Comments by Brand <span class="tooltip-wrap"><span class="tooltip-icon">?</span><span class="tooltip-box">Tells you which brands are getting better traction on Reddit. Brands with high removal rates may need a different approach — different subreddits or posting style.</span></span></h2><div id="statusBars"></div><div id="brandBreakChart"></div></div>
 
-    <div class="card" style="margin-bottom:24px"><h2>📊 Survival Rate by Brand</h2><p style="font-size:12px;color:#9ca3af;margin:-10px 0 14px">The most important signal. If your posts and comments are getting removed frequently, Reddit's moderators or spam filters are catching you. You want this trending upward over time.</p><div id="lrChart"></div></div>
+    <div class="card" style="margin-bottom:24px"><h2>📊 Survival Rate by Brand <span class="tooltip-wrap"><span class="tooltip-icon">?</span><span class="tooltip-box">The most important signal. If posts and comments are getting removed frequently, Reddit's moderators or spam filters are catching you. You want this trending upward over time.</span></span></h2><div id="lrChart"></div></div>
 
     <div class="card" style="margin-bottom:24px">
-      <h2>🔍 Google Ranking Checker</h2>
-      <p style="font-size:12px;color:#9ca3af;margin-bottom:14px">The ultimate goal. If your Reddit posts are showing up in Google search results for brand-related searches, that's direct SEO value. Track which brands are ranking and in which position.</p>
+      <h2>🔍 Google Ranking Checker <span class="tooltip-wrap"><span class="tooltip-icon">?</span><span class="tooltip-box">The ultimate goal. If your Reddit posts are showing up in Google search results for brand-related searches, that's direct SEO value. Track which brands are ranking and in which position.</span></span></h2>
       <div class="rank-table-wrap"><div id="rankingsList"></div></div>
     </div>
 
     <div class="bottom">
-      <div class="card"><h2>📋 Top Subreddits</h2><p style="font-size:12px;color:#9ca3af;margin:-10px 0 14px">Which subreddits are working best? High survival rate in a subreddit means it's receptive to your content.</p><div id="subBars"></div></div>
+      <div class="card"><h2>📋 Top Subreddits <span class="tooltip-wrap"><span class="tooltip-icon">?</span><span class="tooltip-box">Which subreddits are working best? High survival rate in a subreddit means it's receptive to your content.</span></span></h2><div id="subBars"></div></div>
       <div class="card"><h2>📈 Ranking Mentions by Brand</h2><div id="rankByBrand"></div></div>
     </div>
   `;
