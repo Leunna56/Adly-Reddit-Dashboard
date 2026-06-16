@@ -734,7 +734,7 @@ function render() {
     </div>
 
     ${other > 0 ? `<div class="card" style="margin-bottom:24px">
-      <h2>⚠️ Status Value Breakdown</h2>
+      <h2>⚠️ Status Value Breakdown <span class="tip" title="Shows every unique value in Column H (manual status). Your team enters these manually. Anything other than 'Live' or 'Removed' is flagged in amber — these need attention as they may indicate incomplete or inconsistent data entry.">ℹ️</span></h2>
       <p style="font-size:12px;color:#9ca3af;margin-bottom:12px">All unique values found in the Status column (Column H). Entries not labeled exactly "Live" or "Removed" are shown in amber.</p>
       <div style="display:flex;flex-wrap:wrap;gap:10px">
         ${Object.entries(statusBreakdown).sort((a,b)=>b[1]-a[1]).map(([s,cnt]) => {
@@ -750,7 +750,7 @@ function render() {
     </div>` : ''}
 
     <div class="card" style="margin-bottom:24px">
-      <h2>🤖 Auto Status Breakdown</h2>
+      <h2>🤖 Auto Status Breakdown <span class="tip" title="Shows every unique value in Column I (automated status). This is system-detected — it automatically checks whether a post or comment is still live on Reddit. Compare with Status Value Breakdown to spot gaps where the manual status hasn't been updated to match the auto-check.">ℹ️</span></h2>
       <p style="font-size:12px;color:#9ca3af;margin-bottom:12px">All unique values found in the Auto Status column (Column I). Entries not labeled exactly "Live" or "Removed" are shown in amber.</p>
       <div style="display:flex;flex-wrap:wrap;gap:10px">
         ${Object.entries(autoStatusBreakdown).sort((a,b)=>b[1]-a[1]).map(([s,cnt]) => {
