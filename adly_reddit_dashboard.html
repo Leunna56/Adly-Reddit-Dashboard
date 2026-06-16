@@ -639,6 +639,7 @@ function render() {
   const posts    = data.filter(r => r.type === 'Post').length;
   const comments = data.filter(r => r.type === 'Comment').length;
   const live     = data.filter(isLive).length;
+  const autoLive = data.filter(r => (r.autoStatus||'').trim().toLowerCase() === 'live').length;
   const removed  = data.filter(isRemoved).length;
   const other    = total - live - removed;
   const liveRate = total ? Math.round(live / total * 100) : 0;
@@ -709,6 +710,7 @@ function render() {
     <div class="kpis">
       <div class="kpi"><div class="label">Total Entries</div><div class="value">${total.toLocaleString()}</div><div class="sub">${posts.toLocaleString()} posts · ${comments.toLocaleString()} comments</div></div>
       <div class="kpi live"><div class="label">Currently Live</div><div class="value">${live.toLocaleString()}</div><div class="sub">${liveRate}% survival rate</div></div>
+      <div class="kpi live"><div class="label">Auto Status Live</div><div class="value">${autoLive.toLocaleString()}</div><div class="sub">${total ? Math.round(autoLive/total*100) : 0}% auto-detected live</div></div>
       <div class="kpi removed"><div class="label">Removed</div><div class="value">${removed.toLocaleString()}</div><div class="sub">${Math.round(removed/total*100)}% removal rate</div></div>
       ${other > 0 ? `<div class="kpi"><div class="label">Other Status</div><div class="value" style="color:#f59e0b">${other.toLocaleString()}</div><div class="sub">see breakdown below</div></div>` : ''}
       <div class="kpi rank"><div class="label">Ranking Mentions</div><div class="value">${rankings.length}</div><div class="sub">unique ranking entries</div></div>
