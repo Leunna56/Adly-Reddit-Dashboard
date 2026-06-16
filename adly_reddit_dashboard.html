@@ -651,6 +651,13 @@ function render() {
     statusBreakdown[s] = (statusBreakdown[s] || 0) + 1;
   });
 
+  // --- Auto Status value breakdown (column I) ---
+  const autoStatusBreakdown = {};
+  data.forEach(r => {
+    const s = (r.autoStatus || '').trim() || '(blank)';
+    autoStatusBreakdown[s] = (autoStatusBreakdown[s] || 0) + 1;
+  });
+
   // --- Time series ---
   const periodMap = {};
   data.forEach(r => {
@@ -739,6 +746,22 @@ function render() {
         }).join('')}
       </div>
     </div>` : ''}
+
+    <div class="card" style="margin-bottom:24px">
+      <h2>🤖 Auto Status Breakdown</h2>
+      <p style="font-size:12px;color:#9ca3af;margin-bottom:12px">All unique values found in the Auto Status column (Column I). Entries not labeled exactly "Live" or "Removed" are shown in amber.</p>
+      <div style="display:flex;flex-wrap:wrap;gap:10px">
+        ${Object.entries(autoStatusBreakdown).sort((a,b)=>b[1]-a[1]).map(([s,cnt]) => {
+          const isL = s.toLowerCase()==='live', isR = s.toLowerCase()==='removed';
+          const color = isL ? '#10b981' : isR ? '#ef4444' : '#f59e0b';
+          return `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 16px;min-width:140px">
+            <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.5px">${s}</div>
+            <div style="font-size:24px;font-weight:800;color:${color}">${cnt.toLocaleString()}</div>
+            <div style="font-size:11px;color:#9ca3af">${Math.round(cnt/total*100)}% of total</div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
 
     <div class="card" style="margin-bottom:24px;border-left:4px solid #ff4500">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
