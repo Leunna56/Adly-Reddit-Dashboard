@@ -385,12 +385,14 @@ function render() {
   const daysSinceAnchor = Math.floor((today - ANCHOR) / MS_DAY);
   const completedPeriods = Math.floor(daysSinceAnchor / 14);
 
-  // biWeekOffset 0 = most recently completed period
-  const periodIdx  = completedPeriods - 1 - biWeekOffset;
+  // biWeekOffset 0 = current in-progress period
+  const periodIdx  = completedPeriods - biWeekOffset;
   const prevIdx    = periodIdx - 1;
 
   const periodStart = new Date(ANCHOR.getTime() + periodIdx * 14 * MS_DAY);
-  const periodEnd   = new Date(ANCHOR.getTime() + (periodIdx + 1) * 14 * MS_DAY - MS_DAY);
+  const periodEndRaw = new Date(ANCHOR.getTime() + (periodIdx + 1) * 14 * MS_DAY - MS_DAY);
+  // Cap end to today for the current (in-progress) period
+  const periodEnd   = (biWeekOffset === 0 && periodEndRaw > today) ? today : periodEndRaw;
   const prevStart   = new Date(ANCHOR.getTime() + prevIdx * 14 * MS_DAY);
   const prevEnd     = new Date(ANCHOR.getTime() + (prevIdx + 1) * 14 * MS_DAY - MS_DAY);
 
