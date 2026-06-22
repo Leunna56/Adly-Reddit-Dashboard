@@ -391,8 +391,11 @@ function render() {
 
   const periodStart = new Date(ANCHOR.getTime() + periodIdx * 14 * MS_DAY);
   const periodEndRaw = new Date(ANCHOR.getTime() + (periodIdx + 1) * 14 * MS_DAY - MS_DAY);
-  // Cap end to today for the current (in-progress) period
-  const periodEnd   = (biWeekOffset === 0 && periodEndRaw > today) ? today : periodEndRaw;
+  // Cap end to last completed Sunday for the current (in-progress) period
+  const dayOfWeek = today.getDay(); // 0=Sun, 1=Mon, ... 6=Sat
+  const lastSunday = new Date(today);
+  lastSunday.setDate(today.getDate() - (dayOfWeek === 0 ? 0 : dayOfWeek));
+  const periodEnd   = (biWeekOffset === 0 && periodEndRaw > lastSunday) ? lastSunday : periodEndRaw;
   const prevStart   = new Date(ANCHOR.getTime() + prevIdx * 14 * MS_DAY);
   const prevEnd     = new Date(ANCHOR.getTime() + (prevIdx + 1) * 14 * MS_DAY - MS_DAY);
 
