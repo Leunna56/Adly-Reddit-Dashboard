@@ -385,8 +385,10 @@ function render() {
   const daysSinceAnchor = Math.floor((today - ANCHOR) / MS_DAY);
   const completedPeriods = Math.floor(daysSinceAnchor / 14);
 
-  // biWeekOffset 0 = current in-progress period
-  const periodIdx  = completedPeriods - biWeekOffset;
+  // Show in-progress period if ≥7 days in, otherwise show last completed
+  const daysIntoCurrent = daysSinceAnchor % 14;
+  const basePeriod = daysIntoCurrent >= 7 ? completedPeriods : completedPeriods - 1;
+  const periodIdx  = basePeriod - biWeekOffset;
   const prevIdx    = periodIdx - 1;
 
   const periodStart = new Date(ANCHOR.getTime() + periodIdx * 14 * MS_DAY);
@@ -660,14 +662,17 @@ function render() {
   });
 
   // --- Time series ---
+  const isAutoLiveFn = r => (r.autoStatus||'').trim().toLowerCase() === 'live';
   const periodMap = {};
   data.forEach(r => {
     const k = getPeriodKey(r.date);
-    if (!periodMap[k]) periodMap[k] = { posts:0, comments:0, live:0, removed:0 };
+    if (!periodMap[k]) periodMap[k] = { posts:0, comments:0, live:0, removed:0, autoLive:0, total:0 };
     if (r.type === 'Post') periodMap[k].posts++;
     else periodMap[k].comments++;
     if (isLive(r)) periodMap[k].live++;
     else periodMap[k].removed++;
+    if (isAutoLiveFn(r)) periodMap[k].autoLive++;
+    periodMap[k].total++;
   });
   const sortedPeriods = Object.keys(periodMap).sort();
 
@@ -885,6 +890,11 @@ function render() {
       </div>
     </div>
 
+    <div class="card" style="margin-bottom:24px;padding:16px 22px">
+      <h2 style="font-size:13px;margin-bottom:12px">📉 Progress Over Time <span class="tip" title="Tracks survival rate %, currently live, auto status live, removed, and total activity across each period.">ℹ️</span></h2>
+      <canvas id="progressChart" style="max-height:160px"></canvas>
+    </div>
+
     <div class="charts">
       <div class="card"><h2>📈 Activity Over Time <span class="tip" title="Are you consistently posting week over week? Consistency matters for building Reddit credibility.">ℹ️</span></h2><canvas id="trendChart"></canvas></div>
       <div class="card"><h2>🏷️ Volume by Brand <span class="tip" title="Are you putting enough effort behind each brand? Some brands may be underserved.">ℹ️</span></h2><canvas id="brandChart" style="max-height:280px"></canvas><div id="brandLegend" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:14px"></div></div>
@@ -904,6 +914,97 @@ function render() {
       <div class="card"><h2>📈 Ranking Mentions by Brand</h2><div id="rankByBrand"></div></div>
     </div>
   `;
+
+  // --- Progress Over Time chart ---
+  const pCtx = document.getElementById('progressChart').getContext('2d');
+  const progLabels = sortedPeriods.map(getPeriodLabel);
+  const survivalRates = sortedPeriods.map(k => periodMap[k].total ? Math.round(periodMap[k].live / periodMap[k].total * 100) : 0);
+  new Chart(pCtx, {
+    type: 'line',
+    data: {
+      labels: progLabels,
+      datasets: [
+        {
+          label: 'Survival %',
+          data: survivalRates,
+          borderColor: '#10b981',
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          pointRadius: 3,
+          tension: 0.3,
+          yAxisID: 'yPct'
+        },
+        {
+          label: 'Currently Live',
+          data: sortedPeriods.map(k => periodMap[k].live),
+          borderColor: '#3b82f6',
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          pointRadius: 3,
+          tension: 0.3,
+          yAxisID: 'yCnt'
+        },
+        {
+          label: 'Auto Live',
+          data: sortedPeriods.map(k => periodMap[k].autoLive),
+          borderColor: '#8b5cf6',
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          borderDash: [4,3],
+          pointRadius: 3,
+          tension: 0.3,
+          yAxisID: 'yCnt'
+        },
+        {
+          label: 'Removed',
+          data: sortedPeriods.map(k => periodMap[k].removed),
+          borderColor: '#ef4444',
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          pointRadius: 3,
+          tension: 0.3,
+          yAxisID: 'yCnt'
+        },
+        {
+          label: 'Activity',
+          data: sortedPeriods.map(k => periodMap[k].total),
+          borderColor: '#f59e0b',
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          borderDash: [6,3],
+          pointRadius: 3,
+          tension: 0.3,
+          yAxisID: 'yCnt'
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          position: 'top',
+          labels: { boxWidth: 10, padding: 10, font: { size: 11 } }
+        }
+      },
+      scales: {
+        x: { ticks: { font: { size: 10 }, maxRotation: 45 } },
+        yPct: {
+          type: 'linear',
+          position: 'right',
+          min: 0, max: 100,
+          ticks: { font: { size: 10 }, callback: v => v + '%' },
+          grid: { drawOnChartArea: false }
+        },
+        yCnt: {
+          type: 'linear',
+          position: 'left',
+          beginAtZero: true,
+          ticks: { font: { size: 10 }, precision: 0 }
+        }
+      }
+    }
+  });
 
   // --- Trend chart ---
   const tCtx = document.getElementById('trendChart').getContext('2d');
