@@ -802,6 +802,8 @@ function render() {
         const isAutoRemoved = r => r.autoStatus && r.autoStatus.trim().toLowerCase() === 'removed';
         const twAutoLive = tw.filter(isAutoLive).length, lwAutoLive = lw.filter(isAutoLive).length;
         const twAutoRemoved = tw.filter(isAutoRemoved).length, lwAutoRemoved = lw.filter(isAutoRemoved).length;
+        const twPosts = tw.filter(r => (r.type||'').trim().toLowerCase() === 'post').length;
+        const twComments = tw.filter(r => (r.type||'').trim().toLowerCase() === 'comment').length;
         const twSurv = twTotal ? Math.round(twLive/twTotal*100) : 0;
         const lwSurv = lwTotal ? Math.round(lwLive/lwTotal*100) : 0;
 
@@ -858,6 +860,7 @@ function render() {
             <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.5px">Activity <span class="tip" title="Are you consistently posting week over week? Consistency matters for building Reddit credibility and accumulating indexed content for Google.">ℹ️</span></div>
             <div style="font-size:28px;font-weight:800;color:#111827;margin:6px 0 2px">${twTotal.toLocaleString()} ${arrow(twTotal,lwTotal)}</div>
             <div style="font-size:12px">${diff(twTotal,lwTotal)} entries</div>
+            <div style="font-size:11px;color:#6b7280;margin-top:4px">${twPosts} posts · ${twComments} comments</div>
             <div style="font-size:11px;color:#9ca3af;margin-top:4px">Prev: ${lwTotal.toLocaleString()}</div>
           </div>
           <div style="background:#f9fafb;border-radius:10px;padding:14px">
