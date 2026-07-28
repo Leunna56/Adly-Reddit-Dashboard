@@ -435,7 +435,7 @@ function render() {
   const highlights = [];
   if (thisWeek.length > 0) {
     if (survivalChange > 0) highlights.push(`Overall survival rate improved by <strong>${survivalChange}%</strong> vs prev period (${lastWeekSurvival}% → ${thisWeekSurvival}%)`);
-    const topBrand = weekBrands.find(([,d]) => d.total >= 3 && d.total ? d.live/d.total >= 0.9 : false);
+    const topBrand = [...weekBrands].filter(([,d]) => d.total >= 3).sort((a,b) => (b[1].live/b[1].total) - (a[1].live/a[1].total)).find(([,d]) => d.live/d.total >= 0.9);
     if (topBrand) highlights.push(`<strong>${topBrand[0]}</strong> had a strong week with ${Math.round(topBrand[1].live/topBrand[1].total*100)}% survival rate (${topBrand[1].live} live out of ${topBrand[1].total})`);
     const newRankBrands = weekBrands.filter(([,d]) => d.newRankings.length > 0);
     if (newRankBrands.length) highlights.push(`New Google rankings recorded for: <strong>${newRankBrands.map(([n,d]) => `${n} (${d.newRankings[0]})`).join(', ')}</strong>`);
