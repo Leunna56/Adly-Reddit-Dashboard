@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset=h"UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Adly Reddit Dashboard</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.hjsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="data.js"></script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -441,7 +441,7 @@ function render() {
     if (newRankBrands.length) highlights.push(`New Google rankings recorded for: <strong>${newRankBrands.map(([n,d]) => `${n} (${d.newRankings[0]})`).join(', ')}</strong>`);
     if (thisWeek.length > lastWeek.length) highlights.push(`Activity increased this week — <strong>${thisWeek.length} entries</strong> vs ${lastWeek.length} last week`);
   }
-  if (!highlights.length) highlights.push('No data found for this week. Add entries to your Google Sheet to see highlights.');
+  if (!highlights.length && thisWeek.length === 0) highlights.push('No data found for this week. Add entries to your Google Sheet to see highlights.'); else if (!highlights.length) highlights.push('No positive highlights this period - check Lowlights and Action Items below.');
 
   // Lowlights
   const lowlights = [];
@@ -797,7 +797,7 @@ function render() {
         const tw = thisWeek, lw = lastWeek;
         const twTotal = tw.length, lwTotal = lw.length;
         const twLive = tw.filter(isLive).length, lwLive = lw.filter(isLive).length;
-        const twRemoved = tw.filter(isRemoved).length, lwRemoved = lw.filter(isRemoved).length;
+        const twRemoved = twTotal - twLive, lwRemoved = lwTotal - lwLive;
         const isAutoLive = r => r.autoStatus && r.autoStatus.trim().toLowerCase() === 'live';
         const isAutoRemoved = r => r.autoStatus && r.autoStatus.trim().toLowerCase() === 'removed';
         const twAutoLive = tw.filter(isAutoLive).length, lwAutoLive = lw.filter(isAutoLive).length;
