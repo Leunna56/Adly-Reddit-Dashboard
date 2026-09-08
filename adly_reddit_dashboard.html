@@ -610,7 +610,7 @@ function render() {
     });
 
     // Overall survival drop
-    if (survivalChange < -5) {h
+    if (survivalChange < -5) {
       actions.push(`Survival rate dropped <strong>${Math.abs(survivalChange)}%</strong> this period. Conduct a post-mortem: cross-reference which subreddits had the most removals, check if Reddit updated community rules, and consider A/B testing post formats — organic-sounding questions tend to survive longer than direct recommendations.`);
     }
 
