@@ -182,7 +182,7 @@ async function fetchFromSheets() {
         console.warn('Response looks like HTML or empty, trying next...');
         continue;
       }
-      parseCSV(text);
+      try { parseCSV(text); } catch(parseErr) { console.warn('parseCSV/render error:', parseErr.message); }
       if (RAW.length < 100) { console.warn('Too few rows parsed, trying next...'); continue; }
       const now = new Date();
       status.textContent = '✅ Live · ' + now.toLocaleDateString([],{month:'short',day:'numeric'});
