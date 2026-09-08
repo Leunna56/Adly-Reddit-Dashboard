@@ -607,10 +607,10 @@ function render() {
           d.posts ? Math.round(d.postsLive/d.posts*100) : null,
           d.comments ? Math.round(d.commentsLive/d.comments*100) : null));
       }
-    });h
+    });
 
     // Overall survival drop
-    if (survivalChange < -5) {
+    if (survivalChange < -5) {h
       actions.push(`Survival rate dropped <strong>${Math.abs(survivalChange)}%</strong> this period. Conduct a post-mortem: cross-reference which subreddits had the most removals, check if Reddit updated community rules, and consider A/B testing post formats — organic-sounding questions tend to survive longer than direct recommendations.`);
     }
 
