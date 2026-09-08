@@ -607,7 +607,7 @@ function render() {
           d.posts ? Math.round(d.postsLive/d.posts*100) : null,
           d.comments ? Math.round(d.commentsLive/d.comments*100) : null));
       }
-    });
+    });h
 
     // Overall survival drop
     if (survivalChange < -5) {
@@ -923,7 +923,7 @@ function render() {
     </div>
   `;
 
-  // --- Progress Over Time chart ---
+  // --- Progress Over Time chart ---  if (typeof Chart === 'undefined') { console.warn('Chart.js not loaded'); return; }
   const pCtx = document.getElementById('progressChart').getContext('2d');
   const progLabels = sortedPeriods.map(getPeriodLabel);
   const survivalRates = sortedPeriods.map(k => periodMap[k].total ? Math.round(periodMap[k].live / periodMap[k].total * 100) : 0);
